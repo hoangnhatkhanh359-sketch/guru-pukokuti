@@ -9,26 +9,5 @@
       "timestamp": "2026/5/20 22:24:35"
     }
   ],
-  "groupRequests": [
-    {
-      "id": 1779283486449,
-      "groupName": "test",
-      "groupDescription": "test",
-      "requesterName": "test",
-      "requesterEmail": "test@gmail.com",
-      "desiredCode": "test123",
-      "timestamp": "2026/5/20 22:24:46",
-      "status": "pending"
-    },
-    {
-      "id": 1779283337021,
-      "groupName": "天気係",
-      "groupDescription": "話し合い",
-      "requesterName": "ほあんにゃっとかいん",
-      "requesterEmail": "hoangnhatkhanh359@gmail.com",
-      "desiredCode": "4nenn2kumi",
-      "timestamp": "2026/5/20 22:22:17",
-      "status": "pending"
-    }
-  ]
+  "groupRequests": []
 }
