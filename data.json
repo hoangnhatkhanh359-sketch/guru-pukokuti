@@ -1,8 +1,25 @@
 {
   "accessCode": "group2026",
   "adminCode": "admin2026",
-  "messages": [],
+  "messages": [
+    {
+      "id": 1779283475640,
+      "name": "test",
+      "content": "test message",
+      "timestamp": "2026/5/20 22:24:35"
+    }
+  ],
   "groupRequests": [
+    {
+      "id": 1779283486449,
+      "groupName": "test",
+      "groupDescription": "test",
+      "requesterName": "test",
+      "requesterEmail": "test@gmail.com",
+      "desiredCode": "test123",
+      "timestamp": "2026/5/20 22:24:46",
+      "status": "pending"
+    },
     {
       "id": 1779283337021,
       "groupName": "天気係",
