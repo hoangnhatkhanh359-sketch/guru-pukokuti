@@ -1,5 +1,8 @@
-// APIベースURL
-const API_BASE = 'http://localhost:8000/api';
+// APIベースURL（本番環境用URLまたはローカル）
+// Vercelにデプロイ後、このURLを実際のVercel URLに変更してください
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+    ? 'http://localhost:8000/api' 
+    : 'https://your-vercel-app.vercel.app/api';
 
 // ローカルストレージキー
 const STORAGE_KEY = "messageBoard_access";
