@@ -313,12 +313,12 @@ async function approveRequest(requestId) {
     const adminCode = document.getElementById('adminCode').value;
     
     try {
-        const response = await fetch(`${API_BASE}/group-requests/${requestId}/status`, {
+        const response = await fetch(`${API_BASE}/group-requests/${requestId}/approve`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ status: 'approved', adminCode })
+            body: JSON.stringify({ adminCode })
         });
         
         const data = await response.json();
@@ -339,12 +339,12 @@ async function rejectRequest(requestId) {
     const adminCode = document.getElementById('adminCode').value;
     
     try {
-        const response = await fetch(`${API_BASE}/group-requests/${requestId}/status`, {
+        const response = await fetch(`${API_BASE}/group-requests/${requestId}/reject`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ status: 'rejected', adminCode })
+            body: JSON.stringify({ adminCode })
         });
         
         const data = await response.json();

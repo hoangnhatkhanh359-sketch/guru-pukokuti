@@ -95,6 +95,11 @@ app.post('/api/update-code', (req, res) => {
         return res.json({ success: false, error: 'コードは4文字以上である必要があります' });
     }
     
+    // 既存のコードチェック
+    if (newCode === data.accessCode) {
+        return res.json({ success: false, error: 'このコードは既に存在しています' });
+    }
+    
     data.accessCode = newCode;
     
     if (saveData(data)) {
@@ -170,11 +175,11 @@ app.post('/api/group-requests', (req, res) => {
     }
 });
 
-// グループ申告ステータス更新（管理者用）
-app.post('/api/group-requests/:id/status', (req, res) => {
+// グループ申告承認（管理者用）
+app.post('/api/group-requests/:id/approve', (req, res) => {
     const data = loadData();
     const { id } = req.params;
-    const { status, adminCode } = req.body;
+    const { adminCode } = req.body;
     
     // 管理者認証
     if (adminCode !== data.adminCode) {
@@ -187,10 +192,38 @@ app.post('/api/group-requests/:id/status', (req, res) => {
         return res.json({ success: false, error: '申告が見つかりません' });
     }
     
-    data.groupRequests[requestIndex].status = status;
+    // 申告を削除
+    data.groupRequests.splice(requestIndex, 1);
     
     if (saveData(data)) {
-        res.json({ success: true, message: 'ステータスを更新しました' });
+        res.json({ success: true, message: '申告を承認して削除しました' });
+    } else {
+        res.json({ success: false, error: '保存に失敗しました' });
+    }
+});
+
+// グループ申告拒否（管理者用）
+app.post('/api/group-requests/:id/reject', (req, res) => {
+    const data = loadData();
+    const { id } = req.params;
+    const { adminCode } = req.body;
+    
+    // 管理者認証
+    if (adminCode !== data.adminCode) {
+        return res.json({ success: false, error: '管理者コードが間違っています' });
+    }
+    
+    const requestIndex = data.groupRequests.findIndex(req => req.id === parseInt(id));
+    
+    if (requestIndex === -1) {
+        return res.json({ success: false, error: '申告が見つかりません' });
+    }
+    
+    // 申告を削除
+    data.groupRequests.splice(requestIndex, 1);
+    
+    if (saveData(data)) {
+        res.json({ success: true, message: '申告を拒否して削除しました' });
     } else {
         res.json({ success: false, error: '保存に失敗しました' });
     }
