@@ -2,16 +2,5 @@
   "accessCode": "group2026",
   "adminCode": "admin2026",
   "messages": [],
-  "groupRequests": [
-    {
-      "id": 1779282138052,
-      "groupName": "ka",
-      "groupDescription": "ka",
-      "requesterName": "ka",
-      "requesterEmail": "ka@ka",
-      "desiredCode": "aiueo",
-      "timestamp": "2026/5/20 22:02:18",
-      "status": "rejected"
-    }
-  ]
+  "groupRequests": []
 }
