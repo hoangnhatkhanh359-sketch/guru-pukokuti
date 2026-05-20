@@ -360,6 +360,62 @@ async function rejectRequest(requestId) {
     }
 }
 
+// 承認済み申告一覧表示（管理者用）
+async function displayApprovedRequests() {
+    const approvedList = document.getElementById('approvedList');
+    
+    try {
+        const response = await fetch(`${API_BASE}/approved-requests`);
+        const data = await response.json();
+        
+        if (data.requests.length === 0) {
+            approvedList.innerHTML = '<p class="no-requests">まだ承認済み申告がありません</p>';
+            return;
+        }
+        
+        approvedList.innerHTML = data.requests.map(req => `
+            <div class="request-card">
+                <div class="request-header">
+                    <span class="request-group-name">${escapeHtml(req.groupName)}</span>
+                    <span class="request-status approved">承認済み</span>
+                </div>
+                <div class="request-details">
+                    <p><strong>説明:</strong> ${escapeHtml(req.groupDescription)}</p>
+                    <p><strong>申告者:</strong> ${escapeHtml(req.requesterName)}</p>
+                    <p><strong>Gmail:</strong> ${escapeHtml(req.requesterEmail)}</p>
+                    <p><strong>希望コード:</strong> ${escapeHtml(req.desiredCode)}</p>
+                    <p><strong>申告日時:</strong> ${req.timestamp}</p>
+                    <p><strong>承認日時:</strong> ${req.approvedAt}</p>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        approvedList.innerHTML = '<p class="no-requests">サーバーに接続できません</p>';
+        console.error('Error:', error);
+    }
+}
+
+// タブ切り替え
+function showTab(tabName) {
+    const pendingTab = document.getElementById('pendingTab');
+    const approvedTab = document.getElementById('approvedTab');
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    
+    tabBtns.forEach(btn => btn.classList.remove('active'));
+    
+    if (tabName === 'pending') {
+        pendingTab.classList.add('active');
+        approvedTab.classList.remove('active');
+        tabBtns[0].classList.add('active');
+        displayGroupRequests();
+    } else if (tabName === 'approved') {
+        pendingTab.classList.remove('active');
+        approvedTab.classList.add('active');
+        tabBtns[1].classList.add('active');
+        displayApprovedRequests();
+    }
+}
+
 // Enterキーでコード入力
 document.addEventListener('DOMContentLoaded', function() {
     const codeInput = document.getElementById('accessCode');

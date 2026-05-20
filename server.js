@@ -18,7 +18,8 @@ const initialData = {
     accessCode: 'group2026',
     adminCode: 'admin2026',
     messages: [],
-    groupRequests: []
+    groupRequests: [],
+    approvedRequests: []
 };
 
 // データ読み込み
@@ -192,11 +193,14 @@ app.post('/api/group-requests/:id/approve', (req, res) => {
         return res.json({ success: false, error: '申告が見つかりません' });
     }
     
-    // 申告を削除
-    data.groupRequests.splice(requestIndex, 1);
+    // 申告を承認済み配列に移動
+    const approvedRequest = data.groupRequests.splice(requestIndex, 1)[0];
+    approvedRequest.status = 'approved';
+    approvedRequest.approvedAt = new Date().toLocaleString('ja-JP');
+    data.approvedRequests.push(approvedRequest);
     
     if (saveData(data)) {
-        res.json({ success: true, message: '申告を承認して削除しました' });
+        res.json({ success: true, message: '申告を承認しました' });
     } else {
         res.json({ success: false, error: '保存に失敗しました' });
     }
@@ -227,6 +231,12 @@ app.post('/api/group-requests/:id/reject', (req, res) => {
     } else {
         res.json({ success: false, error: '保存に失敗しました' });
     }
+});
+
+// 承認済み申告取得（管理者用）
+app.get('/api/approved-requests', (req, res) => {
+    const data = loadData();
+    res.json({ requests: data.approvedRequests });
 });
 
 app.listen(PORT, () => {

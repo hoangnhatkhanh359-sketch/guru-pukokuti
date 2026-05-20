@@ -37,10 +37,26 @@
                     <p id="setCodeSuccess" class="success"></p>
                 </div>
                 
-                <div class="group-requests">
-                    <h2>グループ追加申告一覧</h2>
-                    <div id="requestsList" class="requests-list">
-                        <!-- 申告がここに表示されます -->
+                <div class="admin-tabs">
+                    <button class="tab-btn active" onclick="showTab('pending')">保留中の申告</button>
+                    <button class="tab-btn" onclick="showTab('approved')">承認済み申告</button>
+                </div>
+                
+                <div id="pendingTab" class="tab-content active">
+                    <div class="group-requests">
+                        <h2>グループ追加申告一覧</h2>
+                        <div id="requestsList" class="requests-list">
+                            <!-- 申告がここに表示されます -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="approvedTab" class="tab-content">
+                    <div class="group-requests">
+                        <h2>承認済み申告一覧</h2>
+                        <div id="approvedList" class="requests-list">
+                            <!-- 承認済み申告がここに表示されます -->
+                        </div>
                     </div>
                 </div>
                 
