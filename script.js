@@ -1,16 +1,9 @@
-// Firebase設定（ここにあなたのFirebaseプロジェクトの設定を入れてください）
-const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-    projectId: "YOUR_PROJECT",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID"
-};
+// Supabase設定（ここにあなたのSupabaseプロジェクトの設定を入れてください）
+const supabaseUrl = 'https://xiuabezuqwtdgpyrifwae.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpdWFiZXp1cXd0Z3B5cmlmd2FlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNjM4OTMsImV4cCI6MjA5NDkzOTg5M30.mLWPWCHo12-bnwMls1QULGZm-LzLnl5QLeena8HL0Sc';
 
-// Firebase初期化
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
+// Supabase初期化
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
 // ローカルストレージキー
 const STORAGE_KEY = "messageBoard_access";
@@ -27,8 +20,20 @@ const initialData = {
 // データ読み込み
 async function loadData() {
     try {
-        const snapshot = await database.ref('data').once('value');
-        const data = snapshot.val();
+        const { data, error } = await supabase
+            .from('app_data')
+            .select('*')
+            .single();
+        
+        if (error) {
+            if (error.code === 'PGRST116') {
+                // データが存在しない場合
+                return initialData;
+            }
+            console.error('データ読み込みエラー:', error);
+            return initialData;
+        }
+        
         return data || initialData;
     } catch (e) {
         console.error('データ読み込みエラー:', e);
@@ -39,7 +44,15 @@ async function loadData() {
 // データ保存
 async function saveData(data) {
     try {
-        await database.ref('data').set(data);
+        const { error } = await supabase
+            .from('app_data')
+            .upsert(data);
+        
+        if (error) {
+            console.error('データ保存エラー:', error);
+            return false;
+        }
+        
         return true;
     } catch (e) {
         console.error('データ保存エラー:', e);
