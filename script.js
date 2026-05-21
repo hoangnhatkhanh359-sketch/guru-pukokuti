@@ -1,6 +1,19 @@
+// Firebase設定（ここにあなたのFirebaseプロジェクトの設定を入れてください）
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID"
+};
+
+// Firebase初期化
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
 // ローカルストレージキー
 const STORAGE_KEY = "messageBoard_access";
-const DATA_KEY = "messageBoard_data";
 
 // 初期データ
 const initialData = {
@@ -12,23 +25,21 @@ const initialData = {
 };
 
 // データ読み込み
-function loadData() {
-    const data = localStorage.getItem(DATA_KEY);
-    if (data) {
-        try {
-            return JSON.parse(data);
-        } catch (e) {
-            console.error('データ読み込みエラー:', e);
-            return initialData;
-        }
+async function loadData() {
+    try {
+        const snapshot = await database.ref('data').once('value');
+        const data = snapshot.val();
+        return data || initialData;
+    } catch (e) {
+        console.error('データ読み込みエラー:', e);
+        return initialData;
     }
-    return initialData;
 }
 
 // データ保存
-function saveData(data) {
+async function saveData(data) {
     try {
-        localStorage.setItem(DATA_KEY, JSON.stringify(data));
+        await database.ref('data').set(data);
         return true;
     } catch (e) {
         console.error('データ保存エラー:', e);
@@ -37,10 +48,10 @@ function saveData(data) {
 }
 
 // コードチェック
-function checkCode() {
+async function checkCode() {
     const inputCode = document.getElementById('accessCode').value;
     const errorMessage = document.getElementById('errorMessage');
-    const data = loadData();
+    const data = await loadData();
     
     if (inputCode === data.accessCode) {
         localStorage.setItem(STORAGE_KEY, Date.now());
@@ -77,7 +88,7 @@ function logout() {
 }
 
 // メッセージ投稿
-function postMessage() {
+async function postMessage() {
     const userName = document.getElementById('userName').value.trim();
     const messageContent = document.getElementById('messageContent').value.trim();
     
@@ -86,7 +97,7 @@ function postMessage() {
         return;
     }
     
-    const data = loadData();
+    const data = await loadData();
     
     const newMessage = {
         id: Date.now(),
@@ -97,7 +108,7 @@ function postMessage() {
     
     data.messages.unshift(newMessage);
     
-    if (saveData(data)) {
+    if (await saveData(data)) {
         document.getElementById('userName').value = '';
         document.getElementById('messageContent').value = '';
         displayMessages();
@@ -107,9 +118,9 @@ function postMessage() {
 }
 
 // メッセージ表示
-function displayMessages() {
+async function displayMessages() {
     const messagesList = document.getElementById('messagesList');
-    const data = loadData();
+    const data = await loadData();
     
     if (data.messages.length === 0) {
         messagesList.innerHTML = '<p class="no-messages">まだメッセージがありません</p>';
@@ -135,10 +146,10 @@ function escapeHtml(text) {
 }
 
 // 管理者コードチェック
-function checkAdminCode() {
+async function checkAdminCode() {
     const adminCode = document.getElementById('adminCode').value;
     const errorMessage = document.getElementById('adminError');
-    const data = loadData();
+    const data = await loadData();
     
     if (adminCode === data.adminCode) {
         document.getElementById('adminLogin').style.display = 'none';
@@ -152,13 +163,13 @@ function checkAdminCode() {
 }
 
 // 現在のコードを表示
-function loadCurrentCode() {
-    const data = loadData();
+async function loadCurrentCode() {
+    const data = await loadData();
     document.getElementById('currentCode').textContent = data.accessCode;
 }
 
 // 新しいコードを設定
-function setNewCode() {
+async function setNewCode() {
     const newCode = document.getElementById('newCode').value.trim();
     const adminCode = document.getElementById('adminCode').value;
     const errorMessage = document.getElementById('setCodeError');
@@ -172,7 +183,7 @@ function setNewCode() {
         return;
     }
     
-    const data = loadData();
+    const data = await loadData();
     
     // 管理者認証
     if (adminCode !== data.adminCode) {
@@ -193,7 +204,7 @@ function setNewCode() {
     
     data.accessCode = newCode;
     
-    if (saveData(data)) {
+    if (await saveData(data)) {
         successMessage.textContent = 'アクセスコードを更新しました';
         document.getElementById('newCode').value = '';
         loadCurrentCode();
@@ -215,7 +226,7 @@ function goToIndex() {
 }
 
 // グループ追加申告送信
-function submitRequest() {
+async function submitRequest() {
     const groupName = document.getElementById('groupName').value.trim();
     const groupDescription = document.getElementById('groupDescription').value.trim();
     const requesterName = document.getElementById('requesterName').value.trim();
@@ -229,7 +240,7 @@ function submitRequest() {
         return;
     }
     
-    const data = loadData();
+    const data = await loadData();
     
     const newRequest = {
         id: Date.now(),
@@ -244,7 +255,7 @@ function submitRequest() {
     
     data.groupRequests.unshift(newRequest);
     
-    if (saveData(data)) {
+    if (await saveData(data)) {
         messageElement.textContent = '申告を送信しました';
         messageElement.className = 'message success';
         document.getElementById('groupName').value = '';
@@ -259,9 +270,9 @@ function submitRequest() {
 }
 
 // グループ申告一覧表示（管理者用）
-function displayGroupRequests() {
+async function displayGroupRequests() {
     const requestsList = document.getElementById('requestsList');
-    const data = loadData();
+    const data = await loadData();
     
     if (data.groupRequests.length === 0) {
         requestsList.innerHTML = '<p class="no-requests">まだ申告がありません</p>';
@@ -302,9 +313,9 @@ function getStatusText(status) {
 }
 
 // 申告承認
-function approveRequest(requestId) {
+async function approveRequest(requestId) {
     const adminCode = document.getElementById('adminCode').value;
-    const data = loadData();
+    const data = await loadData();
     
     // 管理者認証
     if (adminCode !== data.adminCode) {
@@ -325,7 +336,7 @@ function approveRequest(requestId) {
     approvedRequest.approvedAt = new Date().toLocaleString('ja-JP');
     data.approvedRequests.push(approvedRequest);
     
-    if (saveData(data)) {
+    if (await saveData(data)) {
         displayGroupRequests();
     } else {
         alert('保存に失敗しました');
@@ -333,9 +344,9 @@ function approveRequest(requestId) {
 }
 
 // 申告拒否
-function rejectRequest(requestId) {
+async function rejectRequest(requestId) {
     const adminCode = document.getElementById('adminCode').value;
-    const data = loadData();
+    const data = await loadData();
     
     // 管理者認証
     if (adminCode !== data.adminCode) {
@@ -353,7 +364,7 @@ function rejectRequest(requestId) {
     // 申告を削除
     data.groupRequests.splice(requestIndex, 1);
     
-    if (saveData(data)) {
+    if (await saveData(data)) {
         displayGroupRequests();
     } else {
         alert('保存に失敗しました');
@@ -361,9 +372,9 @@ function rejectRequest(requestId) {
 }
 
 // 承認済み申告一覧表示（管理者用）
-function displayApprovedRequests() {
+async function displayApprovedRequests() {
     const approvedList = document.getElementById('approvedList');
-    const data = loadData();
+    const data = await loadData();
     
     if (data.approvedRequests.length === 0) {
         approvedList.innerHTML = '<p class="no-requests">まだ承認済み申告がありません</p>';
