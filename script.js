@@ -433,8 +433,24 @@ function showTab(tabName) {
     }
 }
 
+// モバイルタッチ操作の改善
+function setupTouchEvents() {
+    const buttons = document.querySelectorAll('button');
+    buttons.forEach(button => {
+        button.addEventListener('touchstart', function(e) {
+            this.style.opacity = '0.7';
+        }, { passive: true });
+        
+        button.addEventListener('touchend', function(e) {
+            this.style.opacity = '1';
+        }, { passive: true });
+    });
+}
+
 // Enterキーでコード入力
 document.addEventListener('DOMContentLoaded', function() {
+    setupTouchEvents();
+    
     const codeInput = document.getElementById('accessCode');
     if (codeInput) {
         codeInput.addEventListener('keypress', function(e) {
