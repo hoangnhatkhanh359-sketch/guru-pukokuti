@@ -437,13 +437,42 @@ function showTab(tabName) {
 function setupTouchEvents() {
     const buttons = document.querySelectorAll('button');
     buttons.forEach(button => {
+        // タッチイベント
         button.addEventListener('touchstart', function(e) {
             this.style.opacity = '0.7';
+            this.style.transform = 'scale(0.98)';
         }, { passive: true });
         
         button.addEventListener('touchend', function(e) {
             this.style.opacity = '1';
+            this.style.transform = 'scale(1)';
         }, { passive: true });
+        
+        // マウスイベント（PC用）
+        button.addEventListener('mousedown', function(e) {
+            this.style.opacity = '0.7';
+            this.style.transform = 'scale(0.98)';
+        });
+        
+        button.addEventListener('mouseup', function(e) {
+            this.style.opacity = '1';
+            this.style.transform = 'scale(1)';
+        });
+        
+        button.addEventListener('mouseleave', function(e) {
+            this.style.opacity = '1';
+            this.style.transform = 'scale(1)';
+        });
+        
+        // クリックイベントの強化
+        button.addEventListener('click', function(e) {
+            // クリックイベントが確実に発火するように
+            e.preventDefault();
+            const originalHandler = this.getAttribute('onclick');
+            if (originalHandler) {
+                eval(originalHandler);
+            }
+        });
     });
 }
 
