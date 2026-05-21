@@ -1,31 +1,53 @@
-// APIベースURL（本番環境用URLまたはローカル）
-// Vercelにデプロイ後、このURLを実際のVercel URLに変更してください
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-    ? 'http://localhost:8000/api' 
-    : 'https://your-vercel-app.vercel.app/api';
-
 // ローカルストレージキー
 const STORAGE_KEY = "messageBoard_access";
+const DATA_KEY = "messageBoard_data";
+
+// 初期データ
+const initialData = {
+    accessCode: 'group2026',
+    adminCode: 'admin2026',
+    messages: [],
+    groupRequests: [],
+    approvedRequests: []
+};
+
+// データ読み込み
+function loadData() {
+    const data = localStorage.getItem(DATA_KEY);
+    if (data) {
+        try {
+            return JSON.parse(data);
+        } catch (e) {
+            console.error('データ読み込みエラー:', e);
+            return initialData;
+        }
+    }
+    return initialData;
+}
+
+// データ保存
+function saveData(data) {
+    try {
+        localStorage.setItem(DATA_KEY, JSON.stringify(data));
+        return true;
+    } catch (e) {
+        console.error('データ保存エラー:', e);
+        return false;
+    }
+}
 
 // コードチェック
-async function checkCode() {
+function checkCode() {
     const inputCode = document.getElementById('accessCode').value;
     const errorMessage = document.getElementById('errorMessage');
+    const data = loadData();
     
-    try {
-        const response = await fetch(`${API_BASE}/check-code/${inputCode}`);
-        const data = await response.json();
-        
-        if (data.success) {
-            localStorage.setItem(STORAGE_KEY, Date.now());
-            window.location.href = 'messages.html';
-        } else {
-            errorMessage.textContent = 'コードが間違っています';
-            document.getElementById('accessCode').value = '';
-        }
-    } catch (error) {
-        errorMessage.textContent = 'サーバーに接続できません';
-        console.error('Error:', error);
+    if (inputCode === data.accessCode) {
+        localStorage.setItem(STORAGE_KEY, Date.now());
+        window.location.href = 'messages.html';
+    } else {
+        errorMessage.textContent = 'コードが間違っています';
+        document.getElementById('accessCode').value = '';
     }
 }
 
@@ -55,7 +77,7 @@ function logout() {
 }
 
 // メッセージ投稿
-async function postMessage() {
+function postMessage() {
     const userName = document.getElementById('userName').value.trim();
     const messageContent = document.getElementById('messageContent').value.trim();
     
@@ -64,56 +86,45 @@ async function postMessage() {
         return;
     }
     
-    try {
-        const response = await fetch(`${API_BASE}/messages`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name: userName, content: messageContent })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            document.getElementById('userName').value = '';
-            document.getElementById('messageContent').value = '';
-            displayMessages();
-        } else {
-            alert(data.error || '投稿に失敗しました');
-        }
-    } catch (error) {
-        alert('サーバーに接続できません');
-        console.error('Error:', error);
+    const data = loadData();
+    
+    const newMessage = {
+        id: Date.now(),
+        name: userName,
+        content: messageContent,
+        timestamp: new Date().toLocaleString('ja-JP')
+    };
+    
+    data.messages.unshift(newMessage);
+    
+    if (saveData(data)) {
+        document.getElementById('userName').value = '';
+        document.getElementById('messageContent').value = '';
+        displayMessages();
+    } else {
+        alert('保存に失敗しました');
     }
 }
 
 // メッセージ表示
-async function displayMessages() {
+function displayMessages() {
     const messagesList = document.getElementById('messagesList');
+    const data = loadData();
     
-    try {
-        const response = await fetch(`${API_BASE}/messages`);
-        const data = await response.json();
-        
-        if (data.messages.length === 0) {
-            messagesList.innerHTML = '<p class="no-messages">まだメッセージがありません</p>';
-            return;
-        }
-        
-        messagesList.innerHTML = data.messages.map(msg => `
-            <div class="message-card">
-                <div class="message-header">
-                    <span class="message-name">${escapeHtml(msg.name)}</span>
-                    <span class="message-time">${msg.timestamp}</span>
-                </div>
-                <div class="message-content">${escapeHtml(msg.content)}</div>
-            </div>
-        `).join('');
-    } catch (error) {
-        messagesList.innerHTML = '<p class="no-messages">サーバーに接続できません</p>';
-        console.error('Error:', error);
+    if (data.messages.length === 0) {
+        messagesList.innerHTML = '<p class="no-messages">まだメッセージがありません</p>';
+        return;
     }
+    
+    messagesList.innerHTML = data.messages.map(msg => `
+        <div class="message-card">
+            <div class="message-header">
+                <span class="message-name">${escapeHtml(msg.name)}</span>
+                <span class="message-time">${msg.timestamp}</span>
+            </div>
+            <div class="message-content">${escapeHtml(msg.content)}</div>
+        </div>
+    `).join('');
 }
 
 // HTMLエスケープ
@@ -124,49 +135,30 @@ function escapeHtml(text) {
 }
 
 // 管理者コードチェック
-async function checkAdminCode() {
+function checkAdminCode() {
     const adminCode = document.getElementById('adminCode').value;
     const errorMessage = document.getElementById('adminError');
+    const data = loadData();
     
-    try {
-        const response = await fetch(`${API_BASE}/check-admin`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ code: adminCode })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            document.getElementById('adminLogin').style.display = 'none';
-            document.getElementById('adminPanel').style.display = 'block';
-            loadCurrentCode();
-            displayGroupRequests();
-        } else {
-            errorMessage.textContent = '管理者コードが間違っています';
-            document.getElementById('adminCode').value = '';
-        }
-    } catch (error) {
-        errorMessage.textContent = 'サーバーに接続できません';
-        console.error('Error:', error);
+    if (adminCode === data.adminCode) {
+        document.getElementById('adminLogin').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'block';
+        loadCurrentCode();
+        displayGroupRequests();
+    } else {
+        errorMessage.textContent = '管理者コードが間違っています';
+        document.getElementById('adminCode').value = '';
     }
 }
 
 // 現在のコードを表示
-async function loadCurrentCode() {
-    try {
-        const response = await fetch(`${API_BASE}/current-code`);
-        const data = await response.json();
-        document.getElementById('currentCode').textContent = data.code;
-    } catch (error) {
-        console.error('Error:', error);
-    }
+function loadCurrentCode() {
+    const data = loadData();
+    document.getElementById('currentCode').textContent = data.accessCode;
 }
 
 // 新しいコードを設定
-async function setNewCode() {
+function setNewCode() {
     const newCode = document.getElementById('newCode').value.trim();
     const adminCode = document.getElementById('adminCode').value;
     const errorMessage = document.getElementById('setCodeError');
@@ -180,27 +172,33 @@ async function setNewCode() {
         return;
     }
     
-    try {
-        const response = await fetch(`${API_BASE}/update-code`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ newCode, adminCode })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            successMessage.textContent = data.message;
-            document.getElementById('newCode').value = '';
-            loadCurrentCode();
-        } else {
-            errorMessage.textContent = data.error;
-        }
-    } catch (error) {
-        errorMessage.textContent = 'サーバーに接続できません';
-        console.error('Error:', error);
+    const data = loadData();
+    
+    // 管理者認証
+    if (adminCode !== data.adminCode) {
+        errorMessage.textContent = '管理者コードが間違っています';
+        return;
+    }
+    
+    if (newCode.length < 4) {
+        errorMessage.textContent = 'コードは4文字以上である必要があります';
+        return;
+    }
+    
+    // 既存のコードチェック
+    if (newCode === data.accessCode) {
+        errorMessage.textContent = 'このコードは既に存在しています';
+        return;
+    }
+    
+    data.accessCode = newCode;
+    
+    if (saveData(data)) {
+        successMessage.textContent = 'アクセスコードを更新しました';
+        document.getElementById('newCode').value = '';
+        loadCurrentCode();
+    } else {
+        errorMessage.textContent = '保存に失敗しました';
     }
 }
 
@@ -217,7 +215,7 @@ function goToIndex() {
 }
 
 // グループ追加申告送信
-async function submitRequest() {
+function submitRequest() {
     const groupName = document.getElementById('groupName').value.trim();
     const groupDescription = document.getElementById('groupDescription').value.trim();
     const requesterName = document.getElementById('requesterName').value.trim();
@@ -231,74 +229,66 @@ async function submitRequest() {
         return;
     }
     
-    try {
-        const response = await fetch(`${API_BASE}/group-requests`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ groupName, groupDescription, requesterName, requesterEmail, desiredCode })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            messageElement.textContent = '申告を送信しました';
-            messageElement.className = 'message success';
-            document.getElementById('groupName').value = '';
-            document.getElementById('groupDescription').value = '';
-            document.getElementById('requesterName').value = '';
-            document.getElementById('requesterEmail').value = '';
-            document.getElementById('desiredCode').value = '';
-        } else {
-            messageElement.textContent = data.error || '送信に失敗しました';
-            messageElement.className = 'message error';
-        }
-    } catch (error) {
-        messageElement.textContent = 'サーバーに接続できません';
+    const data = loadData();
+    
+    const newRequest = {
+        id: Date.now(),
+        groupName,
+        groupDescription,
+        requesterName,
+        requesterEmail,
+        desiredCode,
+        timestamp: new Date().toLocaleString('ja-JP'),
+        status: 'pending'
+    };
+    
+    data.groupRequests.unshift(newRequest);
+    
+    if (saveData(data)) {
+        messageElement.textContent = '申告を送信しました';
+        messageElement.className = 'message success';
+        document.getElementById('groupName').value = '';
+        document.getElementById('groupDescription').value = '';
+        document.getElementById('requesterName').value = '';
+        document.getElementById('requesterEmail').value = '';
+        document.getElementById('desiredCode').value = '';
+    } else {
+        messageElement.textContent = '保存に失敗しました';
         messageElement.className = 'message error';
-        console.error('Error:', error);
     }
 }
 
 // グループ申告一覧表示（管理者用）
-async function displayGroupRequests() {
+function displayGroupRequests() {
     const requestsList = document.getElementById('requestsList');
+    const data = loadData();
     
-    try {
-        const response = await fetch(`${API_BASE}/group-requests`);
-        const data = await response.json();
-        
-        if (data.requests.length === 0) {
-            requestsList.innerHTML = '<p class="no-requests">まだ申告がありません</p>';
-            return;
-        }
-        
-        requestsList.innerHTML = data.requests.map(req => `
-            <div class="request-card">
-                <div class="request-header">
-                    <span class="request-group-name">${escapeHtml(req.groupName)}</span>
-                    <span class="request-status ${req.status}">${getStatusText(req.status)}</span>
-                </div>
-                <div class="request-details">
-                    <p><strong>説明:</strong> ${escapeHtml(req.groupDescription)}</p>
-                    <p><strong>申告者:</strong> ${escapeHtml(req.requesterName)}</p>
-                    <p><strong>Gmail:</strong> ${escapeHtml(req.requesterEmail)}</p>
-                    <p><strong>希望コード:</strong> ${escapeHtml(req.desiredCode)}</p>
-                    <p><strong>申告日時:</strong> ${req.timestamp}</p>
-                </div>
-                ${req.status === 'pending' ? `
-                <div class="request-actions">
-                    <button onclick="approveRequest(${req.id})" class="approve-btn">承認</button>
-                    <button onclick="rejectRequest(${req.id})" class="reject-btn">拒否</button>
-                </div>
-                ` : ''}
-            </div>
-        `).join('');
-    } catch (error) {
-        requestsList.innerHTML = '<p class="no-requests">サーバーに接続できません</p>';
-        console.error('Error:', error);
+    if (data.groupRequests.length === 0) {
+        requestsList.innerHTML = '<p class="no-requests">まだ申告がありません</p>';
+        return;
     }
+    
+    requestsList.innerHTML = data.groupRequests.map(req => `
+        <div class="request-card">
+            <div class="request-header">
+                <span class="request-group-name">${escapeHtml(req.groupName)}</span>
+                <span class="request-status ${req.status}">${getStatusText(req.status)}</span>
+            </div>
+            <div class="request-details">
+                <p><strong>説明:</strong> ${escapeHtml(req.groupDescription)}</p>
+                <p><strong>申告者:</strong> ${escapeHtml(req.requesterName)}</p>
+                <p><strong>Gmail:</strong> ${escapeHtml(req.requesterEmail)}</p>
+                <p><strong>希望コード:</strong> ${escapeHtml(req.desiredCode)}</p>
+                <p><strong>申告日時:</strong> ${req.timestamp}</p>
+            </div>
+            ${req.status === 'pending' ? `
+            <div class="request-actions">
+                <button onclick="approveRequest(${req.id})" class="approve-btn">承認</button>
+                <button onclick="rejectRequest(${req.id})" class="reject-btn">拒否</button>
+            </div>
+            ` : ''}
+        </div>
+    `).join('');
 }
 
 // ステータステキスト取得
@@ -312,90 +302,90 @@ function getStatusText(status) {
 }
 
 // 申告承認
-async function approveRequest(requestId) {
+function approveRequest(requestId) {
     const adminCode = document.getElementById('adminCode').value;
+    const data = loadData();
     
-    try {
-        const response = await fetch(`${API_BASE}/group-requests/${requestId}/approve`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ adminCode })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            displayGroupRequests();
-        } else {
-            alert(data.error || '更新に失敗しました');
-        }
-    } catch (error) {
-        alert('サーバーに接続できません');
-        console.error('Error:', error);
+    // 管理者認証
+    if (adminCode !== data.adminCode) {
+        alert('管理者コードが間違っています');
+        return;
+    }
+    
+    const requestIndex = data.groupRequests.findIndex(req => req.id === requestId);
+    
+    if (requestIndex === -1) {
+        alert('申告が見つかりません');
+        return;
+    }
+    
+    // 申告を承認済み配列に移動
+    const approvedRequest = data.groupRequests.splice(requestIndex, 1)[0];
+    approvedRequest.status = 'approved';
+    approvedRequest.approvedAt = new Date().toLocaleString('ja-JP');
+    data.approvedRequests.push(approvedRequest);
+    
+    if (saveData(data)) {
+        displayGroupRequests();
+    } else {
+        alert('保存に失敗しました');
     }
 }
 
 // 申告拒否
-async function rejectRequest(requestId) {
+function rejectRequest(requestId) {
     const adminCode = document.getElementById('adminCode').value;
+    const data = loadData();
     
-    try {
-        const response = await fetch(`${API_BASE}/group-requests/${requestId}/reject`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ adminCode })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            displayGroupRequests();
-        } else {
-            alert(data.error || '更新に失敗しました');
-        }
-    } catch (error) {
-        alert('サーバーに接続できません');
-        console.error('Error:', error);
+    // 管理者認証
+    if (adminCode !== data.adminCode) {
+        alert('管理者コードが間違っています');
+        return;
+    }
+    
+    const requestIndex = data.groupRequests.findIndex(req => req.id === requestId);
+    
+    if (requestIndex === -1) {
+        alert('申告が見つかりません');
+        return;
+    }
+    
+    // 申告を削除
+    data.groupRequests.splice(requestIndex, 1);
+    
+    if (saveData(data)) {
+        displayGroupRequests();
+    } else {
+        alert('保存に失敗しました');
     }
 }
 
 // 承認済み申告一覧表示（管理者用）
-async function displayApprovedRequests() {
+function displayApprovedRequests() {
     const approvedList = document.getElementById('approvedList');
+    const data = loadData();
     
-    try {
-        const response = await fetch(`${API_BASE}/approved-requests`);
-        const data = await response.json();
-        
-        if (data.requests.length === 0) {
-            approvedList.innerHTML = '<p class="no-requests">まだ承認済み申告がありません</p>';
-            return;
-        }
-        
-        approvedList.innerHTML = data.requests.map(req => `
-            <div class="request-card">
-                <div class="request-header">
-                    <span class="request-group-name">${escapeHtml(req.groupName)}</span>
-                    <span class="request-status approved">承認済み</span>
-                </div>
-                <div class="request-details">
-                    <p><strong>説明:</strong> ${escapeHtml(req.groupDescription)}</p>
-                    <p><strong>申告者:</strong> ${escapeHtml(req.requesterName)}</p>
-                    <p><strong>Gmail:</strong> ${escapeHtml(req.requesterEmail)}</p>
-                    <p><strong>希望コード:</strong> ${escapeHtml(req.desiredCode)}</p>
-                    <p><strong>申告日時:</strong> ${req.timestamp}</p>
-                    <p><strong>承認日時:</strong> ${req.approvedAt}</p>
-                </div>
-            </div>
-        `).join('');
-    } catch (error) {
-        approvedList.innerHTML = '<p class="no-requests">サーバーに接続できません</p>';
-        console.error('Error:', error);
+    if (data.approvedRequests.length === 0) {
+        approvedList.innerHTML = '<p class="no-requests">まだ承認済み申告がありません</p>';
+        return;
     }
+    
+    approvedList.innerHTML = data.approvedRequests.map(req => `
+        <div class="request-card">
+            <div class="request-header">
+                <span class="request-group-name">${escapeHtml(req.groupName)}</span>
+                <span class="request-status approved">承認済み</span>
+            </div>
+            <div class="request-details">
+                <p><strong>説明:</strong> ${escapeHtml(req.groupDescription)}</p>
+                <p><strong>申告者:</strong> ${escapeHtml(req.requesterName)}</p>
+                <p><strong>Gmail:</strong> ${escapeHtml(req.requesterEmail)}</p>
+                <p><strong>希望コード:</strong> ${escapeHtml(req.desiredCode)}</p>
+                <p><strong>申告日時:</strong> ${req.timestamp}</p>
+                <p><strong>承認日時:</strong> ${req.approvedAt}</p>
+            </div>
+        </div>
+    `).join('');
 }
 
 // タブ切り替え
