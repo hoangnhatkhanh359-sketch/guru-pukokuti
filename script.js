@@ -464,15 +464,10 @@ function setupTouchEvents() {
             this.style.transform = 'scale(1)';
         });
         
-        // クリックイベントの強化
-        button.addEventListener('click', function(e) {
-            // クリックイベントが確実に発火するように
-            e.preventDefault();
-            const originalHandler = this.getAttribute('onclick');
-            if (originalHandler) {
-                eval(originalHandler);
-            }
-        });
+        // ボタンのスタイル設定
+        button.style.cursor = 'pointer';
+        button.style.userSelect = 'none';
+        button.style.webkitTapHighlightColor = 'transparent';
     });
 }
 
