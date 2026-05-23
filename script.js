@@ -62,6 +62,7 @@ async function saveData(data) {
 
 // コードチェック
 async function checkCode() {
+    console.log('checkCode called');
     const inputCode = document.getElementById('accessCode').value;
     const errorMessage = document.getElementById('errorMessage');
     const data = await loadData();
@@ -313,8 +314,6 @@ async function displayGroupRequests() {
             ` : ''}
         </div>
     `).join('');
-    
-    setupTouchEvents();
 }
 
 // ステータステキスト取得
@@ -435,48 +434,8 @@ function showTab(tabName) {
     }
 }
 
-// モバイルタッチ操作の改善
-function setupTouchEvents() {
-    const buttons = document.querySelectorAll('button');
-    buttons.forEach(button => {
-        // タッチイベント
-        button.addEventListener('touchstart', function(e) {
-            this.style.opacity = '0.7';
-            this.style.transform = 'scale(0.98)';
-        }, { passive: true });
-        
-        button.addEventListener('touchend', function(e) {
-            this.style.opacity = '1';
-            this.style.transform = 'scale(1)';
-        }, { passive: true });
-        
-        // マウスイベント（PC用）
-        button.addEventListener('mousedown', function(e) {
-            this.style.opacity = '0.7';
-            this.style.transform = 'scale(0.98)';
-        });
-        
-        button.addEventListener('mouseup', function(e) {
-            this.style.opacity = '1';
-            this.style.transform = 'scale(1)';
-        });
-        
-        button.addEventListener('mouseleave', function(e) {
-            this.style.opacity = '1';
-            this.style.transform = 'scale(1)';
-        });
-        
-        // ボタンのスタイル設定
-        button.style.cursor = 'pointer';
-        button.style.userSelect = 'none';
-        button.style.webkitTapHighlightColor = 'transparent';
-    });
-}
-
 // Enterキーでコード入力
 document.addEventListener('DOMContentLoaded', function() {
-    setupTouchEvents();
-    
     const codeInput = document.getElementById('accessCode');
     if (codeInput) {
         codeInput.addEventListener('keypress', function(e) {
