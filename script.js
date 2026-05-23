@@ -307,29 +307,12 @@ async function displayGroupRequests() {
             </div>
             ${req.status === 'pending' ? `
             <div class="request-actions">
-                <button data-action="approve" data-id="${req.id}" class="approve-btn">承認</button>
-                <button data-action="reject" data-id="${req.id}" class="reject-btn">拒否</button>
+                <button onclick="approveRequest(${req.id})" class="approve-btn">承認</button>
+                <button onclick="rejectRequest(${req.id})" class="reject-btn">拒否</button>
             </div>
             ` : ''}
         </div>
     `).join('');
-    
-    // 動的に生成されたボタンにイベントリスナーを追加
-    const approveButtons = requestsList.querySelectorAll('button[data-action="approve"]');
-    approveButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const requestId = parseInt(this.getAttribute('data-id'));
-            approveRequest(requestId);
-        });
-    });
-    
-    const rejectButtons = requestsList.querySelectorAll('button[data-action="reject"]');
-    rejectButtons.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const requestId = parseInt(this.getAttribute('data-id'));
-            rejectRequest(requestId);
-        });
-    });
     
     setupTouchEvents();
 }
@@ -490,68 +473,9 @@ function setupTouchEvents() {
     });
 }
 
-// ボタンイベントリスナーの設定
-function setupButtonListeners() {
-    // 入場ボタン
-    const enterButton = document.getElementById('enterButton');
-    if (enterButton) {
-        enterButton.addEventListener('click', checkCode);
-    }
-    
-    // 認証ボタン
-    const authButton = document.getElementById('authButton');
-    if (authButton) {
-        authButton.addEventListener('click', checkAdminCode);
-    }
-    
-    // 設定ボタン
-    const setCodeButton = document.getElementById('setCodeButton');
-    if (setCodeButton) {
-        setCodeButton.addEventListener('click', setNewCode);
-    }
-    
-    // 投稿ボタン
-    const postButton = document.getElementById('postButton');
-    if (postButton) {
-        postButton.addEventListener('click', postMessage);
-    }
-    
-    // 申告送信ボタン
-    const submitButton = document.getElementById('submitButton');
-    if (submitButton) {
-        submitButton.addEventListener('click', submitRequest);
-    }
-    
-    // ログアウトボタン
-    const logoutButton = document.getElementById('logoutButton');
-    if (logoutButton) {
-        logoutButton.addEventListener('click', logout);
-    }
-    
-    // 管理者ログアウトボタン
-    const logoutAdminButton = document.getElementById('logoutAdminButton');
-    if (logoutAdminButton) {
-        logoutAdminButton.addEventListener('click', logoutAdmin);
-    }
-    
-    // トップに戻るボタン
-    const backButtons = document.querySelectorAll('.back-btn');
-    backButtons.forEach(btn => {
-        btn.addEventListener('click', goToIndex);
-    });
-    
-    // タブボタン
-    const tabButtons = document.querySelectorAll('.tab-btn');
-    tabButtons.forEach((btn, index) => {
-        const tabName = index === 0 ? 'pending' : 'approved';
-        btn.addEventListener('click', () => showTab(tabName));
-    });
-}
-
 // Enterキーでコード入力
 document.addEventListener('DOMContentLoaded', function() {
     setupTouchEvents();
-    setupButtonListeners();
     
     const codeInput = document.getElementById('accessCode');
     if (codeInput) {
