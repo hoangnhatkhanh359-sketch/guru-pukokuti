@@ -166,8 +166,7 @@ async function checkAdminCode() {
     const data = await loadData();
     
     if (adminCode === data.adminCode) {
-        document.getElementById('adminLogin').style.display = 'none';
-        document.getElementById('adminPanel').style.display = 'block';
+        showMainTab('management');
         loadCurrentCode();
         displayGroupRequests();
     } else {
@@ -229,8 +228,7 @@ async function setNewCode() {
 
 // 管理者ログアウト
 function logoutAdmin() {
-    document.getElementById('adminPanel').style.display = 'none';
-    document.getElementById('adminLogin').style.display = 'block';
+    showMainTab('login');
     document.getElementById('adminCode').value = '';
 }
 
@@ -411,6 +409,27 @@ async function displayApprovedRequests() {
             </div>
         </div>
     `).join('');
+}
+
+// メインタブ切り替え
+function showMainTab(tabName) {
+    const loginTab = document.getElementById('loginTab');
+    const managementTab = document.getElementById('managementTab');
+    const loginTabBtn = document.getElementById('loginTabBtn');
+    const managementTabBtn = document.getElementById('managementTabBtn');
+    
+    loginTabBtn.classList.remove('active');
+    managementTabBtn.classList.remove('active');
+    loginTab.classList.remove('active');
+    managementTab.classList.remove('active');
+    
+    if (tabName === 'login') {
+        loginTabBtn.classList.add('active');
+        loginTab.classList.add('active');
+    } else if (tabName === 'management') {
+        managementTabBtn.classList.add('active');
+        managementTab.classList.add('active');
+    }
 }
 
 // タブ切り替え

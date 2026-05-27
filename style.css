@@ -528,6 +528,42 @@ body {
 }
 
 /* 管理者タブ用スタイル */
+.main-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.main-tab-btn {
+    flex: 1;
+    padding: 15px;
+    background: #e0e0e0;
+    color: #555;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.main-tab-btn:hover {
+    background: #d0d0d0;
+}
+
+.main-tab-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.main-tab-content {
+    display: none;
+}
+
+.main-tab-content.active {
+    display: block;
+}
+
 .admin-tabs {
     display: flex;
     gap: 10px;
